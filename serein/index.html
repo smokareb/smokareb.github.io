@@ -646,10 +646,20 @@ p {
   box-shadow: var(--shadow-quiet);
 }
 .footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding: 10px 0 max(8px, env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(rgb(243 238 230 / 0), var(--paper) 14px);
+}
+.footer:empty {
+  display: none;
+}
+[hidden] {
+  display: none !important;
 }
 .footer .row {
   display: flex;
@@ -1610,7 +1620,24 @@ function computeLooks() {
       masks.push(bits);
       look.push(found);
     }
-    LOOK[m.id] = { look, facings };
+    /* Order facings the way they read on a page: top row left to right, then the bottom row. */
+    const centroid = (bits) => {
+      let sx = 0, sy = 0, n = 0;
+      for (let k = 0; k < bits.length; k++) {
+        if (!bits[k]) continue;
+        sx += k % G;
+        sy += Math.floor(k / G);
+        n++;
+      }
+      return n ? [sx / n / G, sy / n / G] : [0.5, 0.5];
+    };
+    const band = (y) => (y < 0.46 ? 0 : y > 0.54 ? 2 : 1);
+    const order = facings
+      .map((pose, cls) => ({ pose, cls, c: centroid(masks[pose]) }))
+      .sort((a, b) => band(a.c[1]) - band(b.c[1]) || a.c[0] - b.c[0] || a.c[1] - b.c[1]);
+    const remap = [];
+    order.forEach((o, k) => (remap[o.cls] = k));
+    LOOK[m.id] = { look: look.map((c) => remap[c]), facings: order.map((o) => o.pose) };
   }
 }
 
@@ -2287,7 +2314,7 @@ function renderMine() {
   const cell = cloth.clientWidth / (2 * P.N);
   const width = el.clientWidth;
   if (!cell || !width) return;
-  const rows = 1.5 * P.N;
+  const rows = 2 * P.N;
   el.style.height = Math.round(rows * cell) + "px";
   el.innerHTML = bandSVG(P.stamp, P.N, P.pal, width / cell, rows);
 }
@@ -2321,7 +2348,7 @@ function renderFooter() {
   const f = document.getElementById("footer");
   if (!f) return;
   const tools = document.getElementById("tools");
-  if (tools) tools.classList.toggle("off", P.phase !== "play");
+  if (tools) tools.hidden = P.phase !== "play";
   const streak = document.getElementById("streak");
   if (streak && P.mode === "tide") streak.textContent = P.woven === 0 ? "" : `${P.woven} in a row`;
   if (P.mode === "zen") {
@@ -2343,6 +2370,10 @@ function renderFooter() {
   } else {
     f.innerHTML = `<div class="row"><button class="pill" data-a="room">Room</button><button class="pill ink" data-a="tide">Again</button></div>`;
   }
+  requestAnimationFrame(() => {
+    const r = f.getBoundingClientRect();
+    if (r.bottom > window.innerHeight - 8) app.scrollTo({ top: app.scrollTop + r.bottom - window.innerHeight + 16, behavior: "smooth" });
+  });
 }
 function afterChange(changed, gift = -1) {
   renderStitch(changed, gift);
