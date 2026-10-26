@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Serein</title>
 <meta name="description" content="Study the repeat. Rebuild its stitch. A quiet tile pattern game.">
 <meta name="theme-color" content="#f3eee6">
@@ -98,6 +98,13 @@ p {
   display: none !important;
 }
 
+html,
+body,
+#app {
+  touch-action: pan-x pan-y;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 #app {
   height: 100%;
   overflow-y: auto;
@@ -788,6 +795,74 @@ p {
 }
 .footer .row .pill {
   flex: 1;
+}
+
+/* ---------- win bloom: the window opens, the pattern stays put */
+.bloom {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  cursor: pointer;
+  will-change: clip-path;
+}
+.bloom > svg {
+  position: absolute;
+  inset: 0;
+}
+.bloom.open {
+  transition: clip-path 1s cubic-bezier(0.65, 0, 0.35, 1), -webkit-clip-path 1s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.bloom.closing {
+  pointer-events: none;
+  opacity: 0;
+  transition: clip-path 0.85s cubic-bezier(0.65, 0, 0.35, 1), -webkit-clip-path 0.85s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.5s ease 0.35s;
+}
+.bloom-chip {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  min-width: 200px;
+  padding: 18px 28px 20px;
+  border-radius: 24px;
+  background: var(--paper);
+  box-shadow: 0 24px 60px -24px rgb(36 48 44 / 0.55), 0 0 0 1px rgb(36 48 44 / 0.06);
+  text-align: center;
+  opacity: 0;
+  transform: translate(-50%, -46%);
+  transition: opacity 0.45s ease, transform 0.6s var(--ease);
+}
+.bloom.show .bloom-chip {
+  opacity: 1;
+  transform: translate(-50%, -50%);
+}
+.bloom.closing .bloom-chip {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.bloom-chip .bloom-name {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 28px;
+  line-height: 1.15;
+}
+.bloom-chip .small {
+  margin: 2px 0 0;
+}
+.bloom-chip .result {
+  margin-top: 12px;
+}
+.bloom-chip .result svg.on {
+  animation: none;
+}
+.bloom.show .bloom-chip .result svg.on {
+  animation: pop 0.5s var(--ease) 0.15s both;
+}
+.bloom.show .bloom-chip .result svg:nth-child(2).on {
+  animation-delay: 0.27s;
+}
+.bloom.show .bloom-chip .result svg:nth-child(3).on {
+  animation-delay: 0.39s;
 }
 
 /* ---------- levels and gallery */
@@ -1531,10 +1606,7 @@ const MOTIF_LIST = [
   {
     id: "octagon",
     name: "Octagon",
-    d:
-      poly(regPts(50, 50, OCT_R, 8, 22.5)) +
-      poly(regPts(50, 50, OCT_R * 0.7, 8, 22.5)) +
-      poly(starPts(50, 50, 23, 23 * OCT, 0, 337.5)),
+    d: poly(regPts(50, 50, OCT_R, 8, 22.5)) + poly(starPts(50, 50, 30, 30 * OCT, 0, 337.5)),
   },
   {
     id: "cross",
@@ -1554,7 +1626,7 @@ const PALETTES = {
   granada: { name: "Granada", ground: "#efe2c9", grout: "#d3c19f", colors: ["#245e50", "#b2452f", "#dcae4b", "#25406a", "#211b1d"] },
   fez: { name: "Fez", ground: "#f1eee5", grout: "#d1cbbb", colors: ["#0f6d6a", "#1d3f8e", "#3e8b49", "#e5b03b", "#232323"] },
   chefchaouen: { name: "Chefchaouen", ground: "#eef3f7", grout: "#cad6e0", colors: ["#2c6db3", "#86b6df", "#1b3b6b", "#d7a243", "#53657b"] },
-  marrakech: { name: "Marrakech", ground: "#f4e3cc", grout: "#d9c09e", colors: ["#b4432b", "#e18a38", "#2d6a60", "#7b2e3b", "#e2bd73"] },
+  marrakech: { name: "Marrakech", ground: "#f4e3cc", grout: "#d9c09e", colors: ["#b4432b", "#d47326", "#2d6a60", "#7b2e3b", "#c2922f"] },
   tunis: { name: "Tunis", ground: "#f6f3ea", grout: "#d6d0c0", colors: ["#1d58a6", "#efc11c", "#2c8a56", "#d65b37", "#172f50"] },
   valencia: { name: "Valencia", ground: "#f5eee0", grout: "#d9ccb4", colors: ["#2b599f", "#e1af3a", "#6a8c38", "#b4513a", "#6b4d92"] },
   cordoba: { name: "Córdoba", ground: "#efe0c4", grout: "#d1bb94", colors: ["#8b2e2e", "#d6ac64", "#284b56", "#5c7b4c", "#2a211f"] },
@@ -1787,61 +1859,141 @@ function buildStamp(N, sym, paints) {
   return s;
 }
 
-/* Motifs that join across tile edges, with the side they reach toward at pose 0. */
-const ANCHORED = { half: "corner", fan: "corner", starq: "corner", ring: "corner", petal: "corner", halfstar: "edge", arch: "edge", chevron: "edge" };
-function anchorPose(m, i, N, rng) {
+/* Pattern grammar.
+   Real tilework is built from a few roles: shapes that meet at the corners of tiles and close into stars,
+   circles and flowers; shapes that sit on an edge and join their neighbour across the seam; borders that
+   run along the edges into a lattice; and a centred medallion. Each cell of the stitch gets a role from
+   where it sits, and only motifs that suit that role may fill it, always turned to meet their partners. */
+const ANCHORED = {
+  half: "corner", fan: "corner", starq: "corner", ring: "corner", petal: "corner", slash: "corner",
+  halfstar: "edge", arch: "edge", chevron: "edge", bands: "edge",
+};
+/* Weighted menus per role. Interlocking shapes dominate; small accents stay rare. */
+const MENU = {
+  center: { khatam: 4, octagon: 3, quatrefoil: 3, lozenge: 2, cross: 1, lattice: 1 },
+  inner: { starq: 4, fan: 3, ring: 3, petal: 3, half: 2, slash: 1 },
+  corner: { starq: 4, fan: 3, ring: 3, petal: 3, half: 2, slash: 2, plain: 1 },
+  edge: { halfstar: 4, plain: 2, bands: 1, lattice: 1 },
+};
+const ACCENT = {
+  bead: ["edge", "center"], lozenge: ["edge", "center"], cross: ["center", "edge"], khatam: ["center", "edge"],
+  octagon: ["center", "corner"], quatrefoil: ["center", "edge"], lattice: ["edge", "center"], plain: ["edge", "center"],
+  arch: ["edge"], chevron: ["edge"], bands: ["edge"],
+};
+function orient(m, i, N, out) {
+  const type = ANCHORED[m];
+  if (!type) return 0;
   const x = i % N;
   const y = Math.floor(i / N);
   const mid = (N - 1) / 2;
-  const out = rng() < 0.7;
-  const right = x === mid ? rng() < 0.5 : out ? x > mid : x < mid;
-  const down = y === mid ? rng() < 0.5 : out ? y > mid : y < mid;
-  if (ANCHORED[m] === "corner") return !right && !down ? 0 : right && !down ? 1 : right && down ? 2 : 3;
+  const right = x === mid ? true : out ? x > mid : x < mid;
+  const down = y === mid ? true : out ? y > mid : y < mid;
+  if (type === "corner") return !right && !down ? 0 : right && !down ? 1 : right && down ? 2 : 3;
   const dx = Math.abs(x - mid);
   const dy = Math.abs(y - mid);
   if (dy >= dx) return down ? 2 : 0;
   return right ? 1 : 3;
 }
-
+function roleOf(i, N) {
+  const x = i % N;
+  const y = Math.floor(i / N);
+  if (N === 2) return "inner";
+  const border = x === 0 || y === 0 || x === N - 1 || y === N - 1;
+  const corner = (x === 0 || x === N - 1) && (y === 0 || y === N - 1);
+  if (corner) return "corner";
+  if (border) return "edge";
+  return N === 3 ? "center" : "inner";
+}
+function orbitsOf(N, sym) {
+  const seen = new Set();
+  const reps = [];
+  for (let i = 0; i < N * N; i++) {
+    if (seen.has(i)) continue;
+    const orbit = new Set([i]);
+    let grew = true;
+    while (grew) {
+      grew = false;
+      for (const k of [...orbit]) {
+        const next = [];
+        if (sym === "four" || sym === "kaleido") next.push(rotIdx(k, N));
+        if (sym === "mirror" || sym === "kaleido") next.push(mirIdx(k, N));
+        for (const n of next) if (!orbit.has(n)) {
+          orbit.add(n);
+          grew = true;
+        }
+      }
+    }
+    orbit.forEach((k) => seen.add(k));
+    reps.push(i);
+  }
+  return reps;
+}
+function menuFor(role, pool, fresh) {
+  const list = [];
+  for (const [m, w] of Object.entries(MENU[role])) if (pool.includes(m)) for (let k = 0; k < w; k++) list.push(m);
+  for (const m of fresh) if ((ACCENT[m] || []).includes(role) && !list.includes(m)) list.push(m, m);
+  return list;
+}
 function generate(rng, ch, t, seen) {
   const C = CHAPTERS[ch];
   const N = C.N;
   const pool = unlockedUpTo(ch);
   const fresh = C.intro;
-  let symChoices;
-  if (N === 2) symChoices = t < 0.5 ? ["four", "kaleido", "mirror"] : ["mirror", "none", "four"];
-  else if (N === 3) symChoices = t < 0.3 ? ["kaleido", "four"] : t < 0.7 ? ["four", "mirror", "kaleido"] : ["mirror", "none", "four"];
-  else symChoices = t < 0.4 ? ["kaleido", "four"] : t < 0.75 ? ["four", "mirror", "kaleido"] : ["mirror", "four", "none"];
-  for (let attempt = 0; attempt < 400; attempt++) {
+  const symChoices =
+    N === 2 ? ["four", "kaleido", "four", "mirror"]
+    : t < 0.4 ? ["kaleido", "kaleido", "four"]
+    : t < 0.75 ? ["kaleido", "four", "four", "mirror"]
+    : ["four", "kaleido", "mirror"];
+  for (let attempt = 0; attempt < 600; attempt++) {
     const sym = pick(rng, symChoices);
-    let nP = N === 2 ? 1 + Math.floor(t * 2.4) : N === 3 ? 2 + Math.floor(t * 3.2) : 3 + Math.floor(t * 4.2);
-    if (sym === "none") nP += 1;
-    if (sym === "kaleido" && nP > 2) nP -= 1;
-    const nC = Math.min(5, (ch >= 1 ? 3 : 2) + Math.floor(t * 2.2));
+    const reps = orbitsOf(N, sym);
+    const nC = Math.min(3, 2 + Math.floor(t * 1.8));
     const colors = shuffle([0, 1, 2, 3, 4], rng).slice(0, nC);
+    const fill = N === 2 ? 1 : Math.min(1, 0.7 + t * 0.5);
+    const outward = rng() < 0.75;
+    const limit = N === 4 ? 3 + Math.floor(t * 1.5) : 2 + Math.floor(t * 1.6);
     const paints = [];
-    for (let k = 0; k < nP; k++) {
-      const m = k === 0 ? pick(rng, fresh) : rng() < 0.4 ? pick(rng, fresh) : pick(rng, pool);
-      const i = Math.floor(rng() * N * N);
-      let p = Math.floor(rng() * 8);
-      if (ANCHORED[m] && rng() < 0.85 - t * 0.35) p = anchorPose(m, i, N, rng);
-      paints.push({ i, m, c: pick(rng, colors), p });
-    }
+    const kindsUsed = new Set();
+    let usedFresh = false;
+    let lastColor = -1;
+    shuffle(reps, rng).forEach((i, k) => {
+      const role = roleOf(i, N);
+      if (k > 0 && rng() > fill) return;
+      let list = menuFor(role, pool, fresh);
+      if (!list.length) return;
+      if (kindsUsed.size >= limit) {
+        const reuse = list.filter((m) => kindsUsed.has(m));
+        if (!reuse.length) return;
+        list = reuse;
+      }
+      const native = MENU[role];
+      const freshHere = list.filter((m) => fresh.includes(m) && (native[m] || rng() < 0.35));
+      const m = !usedFresh && freshHere.length && rng() < 0.9 ? pick(rng, freshHere) : pick(rng, list);
+      if (fresh.includes(m)) usedFresh = true;
+      kindsUsed.add(m);
+      let c = pick(rng, colors);
+      if (c === lastColor && colors.length > 1) c = colors[(colors.indexOf(c) + 1) % colors.length];
+      lastColor = c;
+      const out = role === "corner" || role === "edge" ? (rng() < 0.85 ? outward : !outward) : false;
+      paints.push({ i, m, c, p: orient(m, i, N, out) });
+    });
+    if (!usedFresh) continue;
     const stamp = buildStamp(N, sym, paints);
     const filled = stamp.filter((c) => c.m).length;
-    const kinds = new Set(stamp.map(visualKey)).size;
+    const kinds = new Set(stamp.filter((c) => c.m).map(visualKey)).size;
+    const colorsUsed = new Set(stamp.filter((c) => c.m).map((c) => c.c)).size;
     if (filled === 0) continue;
     if (N === 2 && ch === 0 && filled < 2) continue;
-    if (N === 3 && filled < 4 + Math.floor(t * 3)) continue;
-    if (N === 4 && filled < 7 + Math.floor(t * 5)) continue;
-    if (N === 3 && kinds < 2 + Math.floor(t * 2)) continue;
-    if (N === 4 && kinds < 3 + Math.floor(t * 3)) continue;
+    if (N === 3 && filled < 4 + Math.floor(t * 4)) continue;
+    if (N === 4 && filled < 8 + Math.floor(t * 6)) continue;
+    if (N >= 3 && kinds < 2 + Math.floor(t * 1.5)) continue;
+    if (N >= 3 && colorsUsed < Math.min(2 + Math.floor(t * 1.6), nC)) continue;
     const key = canonicalKey(stamp, N);
     if (seen && seen.has(key)) continue;
     if (seen) seen.add(key);
     return { N, stamp, sym };
   }
-  return { N, stamp: buildStamp(N, "kaleido", [{ i: 0, m: fresh[0], c: 0, p: 0 }]), sym: "kaleido" };
+  return { N, stamp: buildStamp(N, "kaleido", [{ i: 0, m: fresh[0], c: 0, p: orient(fresh[0], 0, N, true) }]), sym: "kaleido" };
 }
 
 function makeTray(rng, used, pool, extra) {
@@ -2037,6 +2189,17 @@ function bandSVG(stamp, N, palId, cols, rows) {
   const h = rows * 100;
   return `<svg viewBox="0 0 ${f2(w)} ${h}" aria-hidden="true" preserveAspectRatio="xMinYMin slice" style="width:100%;height:100%"><defs><pattern id="${id}" patternUnits="userSpaceOnUse" width="${size}" height="${size}">${body}</pattern></defs><rect width="${f2(w)}" height="${h}" fill="url(#${id})"/></svg>`;
 }
+function bloomSVG(stamp, N, palId, cell, ox, oy, w, h) {
+  const pal = PALETTES[palId];
+  const id = "bl" + ++uid;
+  const size = N * 100;
+  let body = `<rect width="${size}" height="${size}" fill="${pal.ground}"/>`;
+  stamp.forEach((c, i) => {
+    if (!c.m) return;
+    body += `<g transform="translate(${(i % N) * 100} ${Math.floor(i / N) * 100})">${motifMarkup(c, pal)}</g>`;
+  });
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true" shape-rendering="geometricPrecision"><defs><pattern id="${id}" patternUnits="userSpaceOnUse" width="${size}" height="${size}" patternTransform="translate(${f2(ox)} ${f2(oy)}) scale(${(cell / 100).toFixed(5)})">${body}</pattern></defs><rect width="${w}" height="${h}" fill="url(#${id})"/></svg>`;
+}
 function tileSVG(cell, palId) {
   return `<svg viewBox="0 0 100 100" aria-hidden="true">${tileMarkup(cell, PALETTES[palId])}</svg>`;
 }
@@ -2109,6 +2272,10 @@ function stopLoops() {
 function go(name, arg) {
   stopLoops();
   closeOverlays();
+  if (!folding) {
+    clearTimeout(bloomTimer);
+    document.querySelectorAll(".bloom").forEach((n) => n.remove());
+  }
   screen = name;
   VIEWS[name](arg);
   app.scrollTop = 0;
@@ -2512,6 +2679,63 @@ function paintAt(i, first) {
   haptic(5);
   afterChange(changed);
 }
+/* The finished repeat opens out from the "Yours" window until the pattern fills the screen,
+   rests, then folds into the next cloth's window. The pattern never scales, only the window grows. */
+let bloomTimer = 0;
+let folding = false;
+function insetOf(r, radius) {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  return `inset(${f2(Math.max(0, r.top))}px ${f2(Math.max(0, vw - r.right))}px ${f2(Math.max(0, vh - r.bottom))}px ${f2(Math.max(0, r.left))}px round ${radius}px)`;
+}
+function setClip(el, value) {
+  el.style.webkitClipPath = value;
+  el.style.clipPath = value;
+}
+function celebrate(chip, next) {
+  const from = document.getElementById("mine") || document.getElementById("stitch");
+  if (!from) return next();
+  const r = from.getBoundingClientRect();
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const cell = r.width / (from.id === "mine" ? 2 * P.N : P.N);
+  document.querySelectorAll(".bloom").forEach((n) => n.remove());
+  const ov = document.createElement("div");
+  ov.className = "bloom";
+  ov.setAttribute("role", "status");
+  ov.innerHTML = bloomSVG(P.stamp, P.N, P.pal, cell, r.left, r.top, vw, vh) + `<div class="bloom-chip">${chip}</div>`;
+  setClip(ov, insetOf(r, 11));
+  document.body.appendChild(ov);
+  ov.getBoundingClientRect();
+  requestAnimationFrame(() => {
+    ov.classList.add("open");
+    setClip(ov, "inset(0px 0px 0px 0px round 0px)");
+  });
+  let done = false;
+  const fold = () => {
+    if (done) return;
+    done = true;
+    clearTimeout(bloomTimer);
+    folding = true;
+    try {
+      next();
+    } finally {
+      folding = false;
+    }
+    const target = document.getElementById("cloth") || document.querySelector(".today .inner");
+    const t = target ? target.getBoundingClientRect() : { top: vh / 2, bottom: vh / 2, left: vw / 2, right: vw / 2 };
+    ov.classList.add("closing");
+    requestAnimationFrame(() => setClip(ov, insetOf(t, 11)));
+    setTimeout(() => ov.remove(), 900);
+  };
+  bloomTimer = setTimeout(() => {
+    ov.classList.add("show");
+    bloomTimer = setTimeout(fold, 1900);
+  }, 1050);
+  ov.addEventListener("click", () => {
+    if (ov.classList.contains("show")) fold();
+  });
+}
 function checkWin() {
   if (!P.target || P.phase !== "play") return;
   if (P.hits !== P.N * P.N) return;
@@ -2551,7 +2775,31 @@ function checkWin() {
   renderStitch();
   renderProgress();
   renderTools();
-  renderFooter();
+  const stars = (n) => `<div class="result">${[1, 2, 3].map((x) => starSvg(x <= n)).join("")}</div>`;
+  let chip;
+  let next;
+  if (P.mode === "level") {
+    const idx = P.idx;
+    const last = idx % PER === PER - 1;
+    chip = `<p class="bloom-name">${chapterName(P.ch)}</p><p class="small num">${last ? "Chapter woven" : `Cloth ${idx + 1}`}</p>${stars(P.earned)}`;
+    next = () => (idx + 1 < TOTAL ? startLevel(idx + 1) : go("levels"));
+  } else if (P.mode === "daily") {
+    chip = `<p class="bloom-name">Today’s cloth</p><p class="small num">${save.daily.streak > 1 ? `${save.daily.streak} days running` : "Woven today"}</p>`;
+    next = () => go("room");
+  } else {
+    const round = P.round;
+    const woven = P.woven;
+    chip = `<p class="bloom-name">${woven} in a row</p>`;
+    next = () => startTide(round + 1, woven);
+  }
+  const tools = document.getElementById("tools");
+  if (tools) tools.hidden = true;
+  const bench = document.getElementById("bench");
+  if (bench) bench.classList.add("done");
+  clearTimeout(bloomTimer);
+  bloomTimer = setTimeout(() => {
+    if (screen === "play" && P && P.phase === "clear") celebrate(chip, next);
+  }, 420);
 }
 function tideLoop() {
   const bar = document.getElementById("bar");
@@ -2861,6 +3109,17 @@ document.addEventListener("keydown", (e) => {
     ACTIONS.undo();
   }
   if (e.key === "Escape") closeOverlays();
+});
+/* No zooming: block pinch (iOS gesture events, two-finger moves) and ctrl or trackpad zoom. */
+["gesturestart", "gesturechange", "gestureend"].forEach((t) => document.addEventListener(t, (e) => e.preventDefault(), { passive: false }));
+document.addEventListener("touchmove", (e) => {
+  if (e.touches && e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+document.addEventListener("wheel", (e) => {
+  if (e.ctrlKey) e.preventDefault();
+}, { passive: false });
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && ["+", "=", "-", "0"].includes(e.key)) e.preventDefault();
 });
 const unlockAudio = () => Sound.init();
 ["pointerdown", "touchend", "click", "keydown"].forEach((t) => document.addEventListener(t, unlockAudio, { capture: true, passive: true }));
