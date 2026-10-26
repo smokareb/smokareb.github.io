@@ -13,10 +13,17 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Outfit:wght@400;500&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400;1,600&family=Outfit:wght@400;500&display=swap">
 <style>
 :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
-/* Serein: a quiet pattern room. Paper ground, ink type, framed cloth beside the stitch, tools below. */
+/*
+  Serein: a quiet pattern room.
+  Color: paper #f3eee6, paper-deep #e7e0d4, ink #24302c, muted #5c675f, line #d5cdc0, clay #9a5340, gold #a8843e.
+  Type: Fraunces italic names the things you look at (titles, chapters, captions); Outfit runs the controls. Sentence case only.
+  Layout: header with the name centered; the cloth and yours side by side at one scale; a cross-stitch counter;
+  the stitch on a bench between a tool rail and a facing pad; a tray holding tiles and glazes.
+  Boldness lives in two places: the inlaid title on the room and the stitch counter.
+*/
 :root {
   --paper: #f3eee6;
   --paper-deep: #e7e0d4;
@@ -77,12 +84,18 @@ button:disabled {
 svg {
   display: block;
 }
+figure {
+  margin: 0;
+}
 h1,
 h2 {
   text-wrap: balance;
 }
 p {
   text-wrap: pretty;
+}
+[hidden] {
+  display: none !important;
 }
 
 #app {
@@ -101,42 +114,23 @@ p {
   margin: 0 auto;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 12px 20px;
+  padding-block: 8px 16px;
   display: flex;
   flex-direction: column;
 }
-.rise {
-  animation: rise 0.55s var(--ease) both;
-}
-.rise-late {
-  animation-delay: 90ms;
-}
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-}
 
-/* ---------- header */
+/* ---------- header and shared controls */
 .top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 48px;
+  min-height: 52px;
 }
-.top .group {
+.group {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-.eyebrow {
-  margin: 0;
-  font-size: 12px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--muted);
 }
 .link {
   display: inline-flex;
@@ -146,24 +140,18 @@ p {
   padding: 0 4px;
   border-radius: 999px;
   font-size: 15px;
-  transition: transform 0.15s var(--ease);
 }
-.link:active,
-.round:active,
-.pill:active,
-.dot-btn:active,
-.swatch:active,
-.face-btn:active {
-  transform: scale(0.96);
+.link svg,
+.round svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .link svg {
   width: 16px;
   height: 16px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 .round {
   width: 44px;
@@ -174,16 +162,24 @@ p {
   place-items: center;
   background: var(--paper-deep);
   box-shadow: var(--shadow-quiet);
-  transition: transform 0.15s var(--ease);
+  transition: transform 0.15s var(--ease), background 0.2s, color 0.2s;
 }
 .round svg {
   width: 20px;
   height: 20px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+}
+.round.bare {
+  background: none;
+  box-shadow: none;
+}
+.round[aria-pressed="true"],
+.round.on {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: none;
+}
+.round:disabled {
+  opacity: 0.35;
 }
 .round.glow {
   animation: glow 1.6s ease-in-out infinite;
@@ -193,41 +189,16 @@ p {
     box-shadow: 0 0 0 6px rgb(168 132 62 / 0.35);
   }
 }
-
-/* ---------- type */
-.title {
-  margin: 0;
-  font-family: var(--serif);
-  font-style: italic;
-  font-weight: 400;
-  font-size: 40px;
-  line-height: 1.05;
-  color: var(--ink);
+.link:active,
+.round:active,
+.pill:active,
+.dot-btn:active,
+.swatch:active,
+.face:active,
+.go:active,
+.pal:active {
+  transform: scale(0.96);
 }
-.hero {
-  margin: 0;
-  font-family: var(--serif);
-  font-style: italic;
-  font-weight: 400;
-  font-size: clamp(60px, 17vw, 84px);
-  line-height: 0.95;
-}
-.lede {
-  margin: 14px 0 0;
-  max-width: 24rem;
-  font-size: 18px;
-  line-height: 1.55;
-  color: var(--muted);
-}
-.small {
-  font-size: 14px;
-  color: var(--muted);
-}
-.num {
-  font-variant-numeric: tabular-nums;
-}
-
-/* ---------- buttons */
 .pill {
   min-height: 44px;
   padding: 0 20px;
@@ -238,7 +209,6 @@ p {
   gap: 8px;
   background: var(--paper-deep);
   box-shadow: var(--shadow-quiet);
-  color: var(--ink);
   font-size: 15px;
   transition: transform 0.15s var(--ease), background 0.2s;
 }
@@ -247,9 +217,6 @@ p {
   color: var(--paper);
   box-shadow: none;
   font-weight: 500;
-}
-.pill.ink:hover {
-  background: var(--clay);
 }
 .pill.wide {
   width: 100%;
@@ -263,70 +230,125 @@ p {
   color: var(--paper);
   box-shadow: none;
 }
-.pill[aria-pressed="true"] {
-  background: var(--ink);
-  color: var(--paper);
-  box-shadow: none;
-}
-.pill svg {
-  width: 18px;
-  height: 18px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
 .actions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
 
+/* ---------- type */
+.title {
+  margin: 4px 0 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 44px;
+  line-height: 1.05;
+}
+.small {
+  font-size: 14px;
+  color: var(--muted);
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---------- room */
 .room {
   flex: 1;
   display: grid;
-  align-items: center;
-  gap: 32px;
-  padding: 20px 0 8px;
+  align-content: center;
+  gap: 36px;
+  padding: 12px 0 8px;
 }
 @media (min-width: 900px) {
   .room {
     grid-template-columns: 1fr 1fr;
-    gap: 56px;
+    align-items: center;
+    gap: 64px;
   }
 }
-.room .actions {
-  margin-top: 28px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  max-width: 340px;
+.intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
-.frame {
-  border-radius: 18px;
-  background: var(--paper-deep);
-  padding: 8px;
-  box-shadow: var(--shadow-cloth);
+.hero {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(76px, 24vw, 132px);
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  animation: inlay 1.1s var(--ease) both;
 }
-.frame.tight {
-  padding: 6px;
-  border-radius: 16px;
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .hero {
+    background: var(--inlay) 0 0 / 0.86em 0.86em repeat, var(--ink);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    padding-right: 0.08em;
+  }
 }
-.frame .inner {
-  border-radius: 10px;
-  overflow: hidden;
+@keyframes inlay {
+  from {
+    background-position: -0.43em -0.43em;
+    opacity: 0;
+  }
 }
-.frame svg {
-  width: 100%;
-  height: auto;
-  aspect-ratio: 1;
-}
-.caption {
+.lede {
   margin: 12px 0 0;
-  text-align: center;
-  font-size: 14px;
+  max-width: 22rem;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 21px;
+  line-height: 1.4;
   color: var(--muted);
+}
+.go {
+  margin-top: 28px;
+  width: min(100%, 340px);
+  min-height: 64px;
+  padding: 10px 22px;
+  border-radius: 20px;
+  background: var(--ink);
+  color: var(--paper);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  transition: transform 0.15s var(--ease), background 0.2s;
+}
+.go:hover {
+  background: #2e3c37;
+}
+.go-main {
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+.go-sub {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 15px;
+  opacity: 0.72;
+}
+.ways {
+  margin-top: 10px;
+  width: min(100%, 340px);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.ways .pill {
+  padding: 0 8px;
+}
+.intro > .small {
+  margin: 16px 0 0;
 }
 .today {
   display: block;
@@ -335,82 +357,181 @@ p {
   justify-self: center;
   text-align: left;
 }
-
-/* ---------- play */
-.play-wrap {
-  width: 100%;
-  max-width: 36rem;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.frame {
+  display: block;
+  position: relative;
+  border-radius: 18px;
+  background: var(--paper-deep);
+  padding: 8px;
+  box-shadow: var(--shadow-cloth);
 }
-.status {
+.frame.tight {
+  padding: 5px;
+  border-radius: 16px;
+}
+.frame .inner {
+  display: block;
+  border-radius: 11px;
+  overflow: hidden;
+}
+.frame svg {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+.today-cap {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
+  margin-top: 12px;
+  padding: 0 4px;
 }
-.status .right {
-  font-size: 14px;
+.cap {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 19px;
 }
-.status .right.urgent {
+
+/* ---------- play */
+.play-page {
+  max-width: 34rem;
+  gap: 12px;
+}
+.play-top {
+  display: grid;
+  grid-template-columns: 96px 1fr 96px;
+}
+.play-top > .round.bare {
+  justify-self: start;
+  margin-left: -8px;
+}
+.play-top > .group {
+  justify-self: end;
+}
+.heading {
+  min-width: 0;
+  text-align: center;
+  line-height: 1.15;
+}
+.name {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 24px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sub {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.sub.urgent {
   color: var(--clay);
 }
-.bar {
-  height: 4px;
-  border-radius: 4px;
+.timer {
+  height: 3px;
+  border-radius: 3px;
   background: var(--line);
   overflow: hidden;
 }
-.bar i {
+.timer i {
   display: block;
   height: 100%;
-  width: 100%;
   background: var(--ink);
   transform-origin: left;
-  transform: scaleX(0);
-  transition: transform 0.4s var(--ease), background 0.3s;
 }
-.bar.tide i {
-  transition: none;
-}
-.bar.urgent i {
+.timer.urgent i {
   background: var(--clay);
 }
-.bar.held i {
+.timer.held i {
   background: var(--gold);
 }
-.note {
-  margin: 0;
-  min-height: 22px;
-  font-size: 15px;
-  color: var(--muted);
-}
-.boards {
+.compare {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  align-items: start;
 }
-.boards.n4 {
-  grid-template-columns: 1fr 1.18fr;
+.compare.zen {
+  display: block;
 }
-.label-row {
+.compare figcaption {
+  position: absolute;
+  left: 11px;
+  bottom: 11px;
+  padding: 1px 10px 2px;
+  border-radius: 999px;
+  background: rgb(243 238 230 / 0.92);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.4;
+  pointer-events: none;
+}
+.frame.held {
+  box-shadow: 0 0 0 2px var(--gold), var(--shadow-cloth);
+}
+.inner.wide svg {
+  aspect-ratio: 2;
+}
+.counter {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 6px;
-  margin-bottom: 6px;
-  min-height: 18px;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-height: 12px;
 }
-.label-row .eyebrow {
-  font-size: 11px;
+.counter svg {
+  width: 11px;
+  height: 11px;
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  transition: stroke 0.3s;
 }
-.label-row .small {
-  font-size: 12px;
+.counter svg.on {
+  stroke: var(--ink);
+}
+.counter.held svg {
+  stroke: var(--gold);
+  animation: stitch 0.45s var(--ease) both;
+  animation-delay: calc(var(--k) * 45ms);
+}
+@keyframes stitch {
+  from {
+    transform: scale(0.2) rotate(-90deg);
+  }
+}
+.note {
+  margin: 0;
+  text-align: center;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 18px;
+}
+.bench {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 80px;
+  gap: 10px;
+  align-items: center;
+}
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.bench.done .rail,
+.bench.done .pad {
+  visibility: hidden;
 }
 .stitch {
+  width: 100%;
+  max-width: 270px;
+  justify-self: center;
   display: grid;
   gap: 4px;
   padding: 6px;
@@ -474,32 +595,49 @@ p {
     opacity: 0;
   }
 }
-.tools {
+.pad {
+  display: grid;
+  grid-template-columns: repeat(2, 36px);
+  gap: 8px;
+  justify-content: center;
+  align-content: center;
+}
+.pad[data-n="2"] {
+  grid-template-columns: 36px;
+}
+.face {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  overflow: hidden;
+  box-shadow: var(--shadow-quiet);
+  transition: transform 0.15s var(--ease), box-shadow 0.2s;
+}
+.face svg {
+  width: 100%;
+  height: 100%;
+}
+.face[aria-pressed="true"] {
+  box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ink);
+}
+.tray {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 4px;
-}
-.tools.off {
-  pointer-events: none;
-  opacity: 0.4;
+  padding: 10px;
+  border-radius: 22px;
+  background: var(--paper-deep);
+  box-shadow: inset 0 0 0 1px rgb(36 48 44 / 0.05);
 }
 .marks {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.marks .scroller {
-  flex: 1;
-  min-width: 0;
   display: flex;
   gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
-  padding: 2px;
-  margin: -2px;
+  padding: 3px;
+  margin: -3px;
 }
-.marks .scroller::-webkit-scrollbar {
+.marks::-webkit-scrollbar {
   display: none;
 }
 .dot-btn {
@@ -509,32 +647,18 @@ p {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: var(--paper-deep);
-  box-shadow: var(--shadow-quiet);
+  background: var(--paper);
   color: var(--ink);
   transition: transform 0.15s var(--ease), background 0.2s;
 }
 .dot-btn[aria-pressed="true"] {
   background: var(--ink);
   color: var(--paper);
-  box-shadow: none;
-}
-.dot-btn:disabled {
-  opacity: 0.4;
 }
 .dot-btn svg.glyph {
   width: 22px;
   height: 22px;
   fill: currentColor;
-}
-.dot-btn svg.icon {
-  width: 20px;
-  height: 20px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 .swatches {
   display: grid;
@@ -545,66 +669,77 @@ p {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  box-shadow: var(--shadow-quiet);
-  transition: transform 0.15s var(--ease);
+  box-shadow: 0 0 0 1px rgb(36 48 44 / 0.12);
+  transition: transform 0.15s var(--ease), box-shadow 0.2s;
 }
 .swatch[aria-pressed="true"] {
-  box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ink);
+  box-shadow: 0 0 0 2px var(--paper-deep), 0 0 0 4px var(--ink);
 }
-.facing {
-  display: grid;
-  gap: 8px;
-}
-.facing.f2 {
-  grid-template-columns: repeat(2, 1fr);
-}
-.facing.f4 {
-  grid-template-columns: repeat(4, 1fr);
-}
-.face-btn {
-  min-height: 44px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  background: var(--paper-deep);
-  box-shadow: var(--shadow-quiet);
-  color: var(--ink);
-  transition: transform 0.15s var(--ease);
-}
-.face-btn[aria-pressed="true"] {
-  background: var(--ink);
-  color: var(--paper);
-  box-shadow: none;
-}
-.face-btn svg {
-  width: 22px;
-  height: 22px;
-  fill: currentColor;
-}
-.syms {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-.syms .pill {
-  padding: 0 4px;
-  font-size: 14px;
+.zen-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .palettes {
+  flex: 1;
+  min-width: 0;
   display: flex;
   gap: 8px;
   overflow-x: auto;
   scrollbar-width: none;
-  padding: 2px;
-  margin: -2px;
+  padding: 4px;
+  margin: -4px;
 }
 .palettes::-webkit-scrollbar {
   display: none;
 }
-.palettes .pill {
+.pal {
   flex: none;
-  padding: 0 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  box-shadow: 0 0 0 1px rgb(36 48 44 / 0.15);
+  transition: transform 0.15s var(--ease);
+}
+.pal i {
+  display: block;
+}
+.pal[aria-pressed="true"] {
+  box-shadow: 0 0 0 2px var(--paper-deep), 0 0 0 4px var(--ink);
+}
+.seg {
+  flex: none;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--paper);
+}
+.seg button {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
   font-size: 14px;
+  color: var(--muted);
+}
+.seg button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+.memo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.memo .thumb {
+  width: 56px;
+  flex: none;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-quiet);
 }
 .result {
   display: flex;
@@ -633,18 +768,6 @@ p {
     transform: scale(0.3) rotate(-50deg);
   }
 }
-.memo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.memo .thumb {
-  width: 56px;
-  flex: none;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: var(--shadow-quiet);
-}
 .footer {
   position: sticky;
   bottom: 0;
@@ -652,14 +775,12 @@ p {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 10px 0 max(8px, env(safe-area-inset-bottom, 0px));
+  padding: 10px 0 max(6px, env(safe-area-inset-bottom, 0px));
+  margin-bottom: -10px;
   background: linear-gradient(rgb(243 238 230 / 0), var(--paper) 14px);
 }
 .footer:empty {
   display: none;
-}
-[hidden] {
-  display: none !important;
 }
 .footer .row {
   display: flex;
@@ -680,14 +801,14 @@ p {
   gap: 12px;
   margin-bottom: 12px;
 }
-.section-head .meta {
+.meta {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   font-size: 13px;
   color: var(--muted);
 }
-.section-head .meta svg {
+.meta svg {
   width: 13px;
   height: 13px;
   fill: var(--gold);
@@ -697,7 +818,7 @@ p {
   font-family: var(--serif);
   font-style: italic;
   font-weight: 400;
-  font-size: 24px;
+  font-size: 26px;
 }
 .chapter.locked .chapter-name,
 .chapter.locked .lv {
@@ -790,7 +911,9 @@ p {
 }
 .card p {
   margin: 8px 0 0;
-  font-size: 14px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
 }
 .detail {
   width: 100%;
@@ -828,7 +951,7 @@ p {
   }
 }
 .sheet .title {
-  font-size: 30px;
+  font-size: 32px;
   margin-bottom: 8px;
 }
 .set {
@@ -879,11 +1002,12 @@ input[type="range"] {
   bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   z-index: 40;
   transform: translateX(-50%);
-  padding: 10px 18px;
+  padding: 9px 18px;
   border-radius: 999px;
   background: var(--ink);
   color: var(--paper);
   font-size: 14px;
+  white-space: nowrap;
   pointer-events: none;
   animation: toast 1.8s var(--ease) both;
 }
@@ -939,11 +1063,10 @@ input[type="range"] {
 <script>
 (() => {
 'use strict';
-/* Serein audio: generative Andalusian guitar, warm pad, courtyard fountain, tuned effects. */
+/* Serein audio: generative Andalusian guitar, warm pad, tuned effects. */
 const Sound = (() => {
   let ctx = null;
-  let master, musicBus, sfxBus, ambBus, reverb;
-  let ambNodes = null;
+  let master, musicBus, sfxBus, reverb;
   let timer = 0;
   let nextBar = 0;
   let barCount = 0;
@@ -951,7 +1074,7 @@ const Sound = (() => {
   let energy = 0.55;
   let melodyIdx = 3;
   const chordLog = [];
-  let cfg = { music: true, vol: 0.7, fountain: true, sfx: true };
+  let cfg = { music: true, vol: 0.7, sfx: true };
 
   const BPM = 58;
   const EIGHTH = 60 / BPM / 2;
@@ -1195,76 +1318,8 @@ const Sound = (() => {
       scheduleBar(nextBar);
       nextBar += BAR;
     }
-    if (cfg.fountain && ambNodes && Math.random() < 0.3) {
-      const when = now + Math.random() * 0.3;
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      const f = rand(1300, 2900);
-      o.type = "sine";
-      o.frequency.setValueAtTime(f, when);
-      o.frequency.exponentialRampToValueAtTime(f * rand(1.25, 1.6), when + 0.05);
-      g.gain.setValueAtTime(0.0001, when);
-      g.gain.exponentialRampToValueAtTime(rand(0.006, 0.016), when + 0.006);
-      g.gain.exponentialRampToValueAtTime(0.0001, when + 0.07);
-      o.connect(g);
-      g.connect(ambBus);
-      o.start(when);
-      o.stop(when + 0.09);
-      o.onended = () => {
-        o.disconnect();
-        g.disconnect();
-      };
-    }
   }
 
-  function buildFountain() {
-    const sr = ctx.sampleRate;
-    const len = sr * 4;
-    const buf = ctx.createBuffer(2, len, sr);
-    for (let c = 0; c < 2; c++) {
-      const d = buf.getChannelData(c);
-      let b0 = 0, b1 = 0, b2 = 0;
-      for (let i = 0; i < len; i++) {
-        const w = Math.random() * 2 - 1;
-        b0 = 0.997 * b0 + w * 0.029;
-        b1 = 0.985 * b1 + w * 0.032;
-        b2 = 0.95 * b2 + w * 0.048;
-        d[i] = (b0 + b1 + b2 + w * 0.05) * 0.9;
-      }
-      const x = Math.floor(sr * 0.2);
-      for (let i = 0; i < x; i++) {
-        const k = i / x;
-        d[i] = d[i] * k + d[len - x + i] * (1 - k);
-      }
-    }
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    src.loop = true;
-    src.loopStart = 0.2;
-    src.loopEnd = 4;
-    const hp = ctx.createBiquadFilter();
-    hp.type = "highpass";
-    hp.frequency.value = 380;
-    const bp = ctx.createBiquadFilter();
-    bp.type = "bandpass";
-    bp.frequency.value = 1500;
-    bp.Q.value = 0.35;
-    const g = ctx.createGain();
-    g.gain.value = 0.11;
-    const lfo = ctx.createOscillator();
-    lfo.frequency.value = 0.09;
-    const lfoGain = ctx.createGain();
-    lfoGain.gain.value = 0.035;
-    lfo.connect(lfoGain);
-    lfoGain.connect(g.gain);
-    src.connect(hp);
-    hp.connect(bp);
-    bp.connect(g);
-    g.connect(ambBus);
-    src.start();
-    lfo.start();
-    ambNodes = { src, lfo };
-  }
 
   function ramp(param, value) {
     param.cancelScheduledValues(ctx.currentTime);
@@ -1275,7 +1330,6 @@ const Sound = (() => {
   function apply() {
     if (!ctx) return;
     ramp(musicBus.gain, cfg.music ? 0.9 * cfg.vol : 0);
-    ramp(ambBus.gain, cfg.fountain ? 0.9 * cfg.vol + 0.15 : 0);
     ramp(sfxBus.gain, cfg.sfx ? 0.9 : 0);
   }
 
@@ -1317,8 +1371,6 @@ const Sound = (() => {
     };
     musicBus = bus(0.65);
     sfxBus = bus(0.4);
-    ambBus = bus(0.25);
-    buildFountain();
     apply();
     nextBar = ctx.currentTime + 0.15;
     timer = window.setInterval(tick, 180);
@@ -1872,7 +1924,7 @@ function defaults() {
     tideBest: 0,
     designs: [],
     draft: null,
-    settings: { music: true, vol: 0.7, fountain: true, sfx: true, haptics: true },
+    settings: { music: true, vol: 0.7, sfx: true, haptics: true },
     tips: {},
   };
 }
@@ -1929,11 +1981,17 @@ const I = {
   mute: IC('<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M22 9l-6 6M16 9l6 6"/>'),
   lantern: IC('<path d="M12 2.5v2.2"/><path d="M8.6 8.2a3.4 3.4 0 0 1 6.8 0z"/><path d="M8.6 8.2h6.8l-1.3 9.3H9.9z"/><path d="M10.2 20.5h3.6M12 17.5v3M12 10.5v4.5"/>'),
   undo: IC('<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>', "icon"),
+  trash: IC('<path d="M4 7h16M10 7V4h4v3M6.5 7l1 13h9l1-13"/>', "icon"),
+  symnone: IC('<rect x="5" y="5" width="14" height="14" rx="2"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/>', "icon"),
+  symmirror: IC('<path d="M12 3v18" stroke-dasharray="2 2.5"/><path d="M9 7L4 12l5 5z"/><path d="M15 7l5 5-5 5z"/>', "icon"),
+  symfour: IC('<path d="M12 3.5l3 4H9zM20.5 12l-4 3V9zM12 20.5l-3-4h6zM3.5 12l4-3v6z"/>', "icon"),
+  symkaleido: IC(`<path d="${poly(starPts(12, 12, 9, 9 * OCT, 0, 337.5))}"/><circle cx="12" cy="12" r="2"/>`, "icon"),
   eraser: IC('<path d="M7 21l-4.3-4.3a1 1 0 0 1 0-1.4l10-10a1 1 0 0 1 1.4 0l5.6 5.6a1 1 0 0 1 0 1.4L13 21"/><path d="M22 21H7M5 11l9 9"/>', "icon"),
 };
 const starSvg = (on) => `<svg viewBox="0 0 24 24" class="${on ? "on" : ""}" aria-hidden="true"><path d="${STAR_D}"/></svg>`;
 const SYMS = ["none", "mirror", "four", "kaleido"];
-const SYM_NAME = { none: "Free", mirror: "Mirror", four: "Four", kaleido: "Kaleido" };
+const SYM_NAME = { none: "Free hand", mirror: "Mirror", four: "Fourfold", kaleido: "Kaleidoscope" };
+const XMARK = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg>';
 
 /* ---------- svg */
 let uid = 0;
@@ -1958,7 +2016,7 @@ function clothSVG(stamp, N, palId, repeats = 2, o = {}) {
   const id = "p" + ++uid;
   const size = N * 100;
   const total = size * repeats;
-  let body = `<rect width="${size}" height="${size}" fill="${pal.ground}"/>`;
+  let body = `<rect width="${size}" height="${size}" fill="${o.ground || pal.ground}"/>`;
   stamp.forEach((cell, i) => {
     if (!cell.m) return;
     body += `<g transform="translate(${(i % N) * 100} ${Math.floor(i / N) * 100})">${motifMarkup(cell, pal)}</g>`;
@@ -2028,7 +2086,7 @@ const isTop = (() => {
 })();
 const longDate = (d) => new Intl.DateTimeFormat("en", { weekday: "long", month: "long", day: "numeric" }).format(d);
 const clock = (s) => Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
-const soundOn = () => save.settings.music || save.settings.sfx || save.settings.fountain;
+const soundOn = () => save.settings.music || save.settings.sfx;
 const SHOWCASE = () => ({
   N: 3,
   pal: "granada",
@@ -2057,6 +2115,7 @@ function go(name, arg) {
 }
 const soundBtn = () => `<button class="round" data-a="sound" id="soundBtn" aria-label="Sound">${soundOn() ? I.sound : I.mute}</button>`;
 const backLink = (label, action = "room") => `<button class="link" data-a="${action}">${I.back}<span>${label}</span></button>`;
+const starCount = (got, of) => `<span class="meta num">${starSvg(true)}${got} of ${of}</span>`;
 
 /* ---------- room */
 function roomView() {
@@ -2064,26 +2123,22 @@ function roomView() {
   const daily = dailySpec(now);
   const n = nextLevel();
   const doneToday = !!save.daily.done[daily.key];
-  const where = n < 0 ? "Every cloth is woven." : `${chapterName(Math.floor(n / PER))} ${n + 1}`;
-  const best = save.tideBest > 0 ? ` · Best run ${save.tideBest}` : "";
+  const inlay = encodeURIComponent(clothSVG(daily.target, daily.N, daily.pal, 1, { ground: "#24302c" }));
+  const where = n < 0 ? "Every cloth is woven" : `${chapterName(Math.floor(n / PER))}, cloth ${n + 1}`;
+  const today = doneToday ? (save.daily.streak > 1 ? `Woven, ${save.daily.streak} days running` : "Woven today") : "Waiting for you";
   app.innerHTML = `<div class="page">
-  <header class="top"><p class="eyebrow">A pattern room</p><div class="group"><button class="link" data-a="gallery">Gallery</button>${soundBtn()}</div></header>
+  <header class="top"><span></span><div class="group"><button class="link" data-a="gallery">Gallery</button>${soundBtn()}</div></header>
   <div class="room">
-    <div class="rise">
-      <h1 class="hero">Serein</h1>
+    <div class="intro">
+      <h1 class="hero" style="--inlay:url('data:image/svg+xml;utf8,${inlay}')">Serein</h1>
       <p class="lede">Study the repeat. Rebuild its stitch.</p>
-      <p class="small" style="margin:18px 0 0">${longDate(now)}</p>
-      <div class="actions">
-        <button class="pill ink play" data-a="continue">${n === 0 ? "Begin" : "Play"}</button>
-        <button class="pill" data-a="levels">Levels</button>
-        <button class="pill" data-a="tide">Recreate</button>
-        <button class="pill" data-a="zen">Zen</button>
-      </div>
-      <p class="small num" style="margin:18px 0 0">${where}${best}</p>
+      <button class="go" data-a="continue"><span class="go-main">${n === 0 ? "Begin" : n < 0 ? "Levels" : "Continue"}</span><span class="go-sub">${where}</span></button>
+      <nav class="ways" aria-label="Modes"><button class="pill" data-a="levels">Levels</button><button class="pill" data-a="tide">Recreate</button><button class="pill" data-a="zen">Zen</button></nav>
+      ${save.tideBest ? `<p class="small num">Longest Recreate run: ${save.tideBest}</p>` : ""}
     </div>
-    <button class="today rise rise-late" data-a="daily" aria-label="Today's cloth">
-      <div class="frame"><div class="inner">${clothSVG(daily.target, daily.N, daily.pal, 3)}</div></div>
-      <p class="caption">Today’s cloth${doneToday ? " · woven" : ""}</p>
+    <button class="today" data-a="daily" aria-label="Weave today’s cloth">
+      <span class="frame"><span class="inner">${clothSVG(daily.target, daily.N, daily.pal, 3)}</span></span>
+      <span class="today-cap"><span class="cap">Today’s cloth</span><span class="small">${today}</span></span>
     </button>
   </div></div>`;
 }
@@ -2091,12 +2146,12 @@ function roomView() {
 /* ---------- levels */
 function levelsView() {
   const n = nextLevel();
-  let html = `<div class="page"><header class="top">${backLink("Room")}<div class="group">${soundBtn()}</div></header><h1 class="title rise">Levels</h1>`;
+  let html = `<div class="page"><header class="top">${backLink("Room")}<div class="group">${soundBtn()}</div></header><h1 class="title">Levels</h1>`;
   CHAPTERS.forEach((C, ch) => {
     let got = 0;
     for (let k = 0; k < PER; k++) got += save.stars[ch * PER + k] || 0;
     const open = unlocked(ch * PER);
-    html += `<section class="section chapter${open ? "" : " locked"}" id="ch${ch}"><div class="section-head"><h2 class="chapter-name">${chapterName(ch)}</h2><span class="meta num">${starSvg(true)}${got}/${PER * 3}</span></div><div class="lv-grid">`;
+    html += `<section class="section chapter${open ? "" : " locked"}" id="ch${ch}"><div class="section-head"><h2 class="chapter-name">${chapterName(ch)}</h2>${starCount(got, PER * 3)}</div><div class="lv-grid">`;
     for (let k = 0; k < PER; k++) {
       const i = ch * PER + k;
       const s = save.stars[i] || 0;
@@ -2128,13 +2183,13 @@ function galleryView() {
   const collected = Object.keys(save.stars).map(Number).sort((a, b) => a - b);
   const card = (svg, name, attrs) => `<button class="card" ${attrs}><div class="frame tight"><div class="inner">${svg}</div></div><p>${name}</p></button>`;
   app.innerHTML = `<div class="page"><header class="top">${backLink("Room")}<div class="group">${soundBtn()}</div></header>
-  <h1 class="title rise">Gallery</h1>
-  <section class="section"><div class="section-head"><p class="eyebrow">Yours</p></div>
+  <h1 class="title">Gallery</h1>
+  <section class="section"><div class="section-head"><h2 class="chapter-name">Yours</h2><span class="meta num">${yours.length || ""}</span></div>
   ${yours.length
     ? `<div class="cards">${yours.map((d, k) => card(clothSVG(d.cells, d.N, d.pal, 2), designName(d, k), `data-a="detail" data-src="yours" data-k="${k}"`)).join("")}</div>`
     : `<div class="actions"><button class="pill" data-a="zen">Zen</button></div>`}
   </section>
-  <section class="section"><div class="section-head"><p class="eyebrow">Collected</p><span class="meta num">${collected.length}/${TOTAL}</span></div>
+  <section class="section"><div class="section-head"><h2 class="chapter-name">Collected</h2><span class="meta num">${collected.length} of ${TOTAL}</span></div>
   ${collected.length
     ? `<div class="cards">${collected.map((i) => { const L = LEVELS[i]; return card(clothSVG(L.target, L.N, L.pal, 2), `${chapterName(L.ch)} ${i + 1}`, `data-a="detail" data-src="level" data-k="${i}"`); }).join("")}</div>`
     : `<div class="actions"><button class="pill ink" data-a="continue">Play</button></div>`}
@@ -2151,7 +2206,7 @@ function detailView() {
   const name = yours ? designName(d, D.k) : `${chapterName(L.ch)} ${D.k + 1}`;
   D.payload = { N, pal, cells, name: "serein-" + name.toLowerCase().replace(/[^a-z0-9]+/g, "-") };
   app.innerHTML = `<div class="page"><header class="top">${backLink("Gallery", "gallery")}<div class="group">${soundBtn()}</div></header>
-  <div class="detail rise">
+  <div class="detail">
     <h1 class="title">${name}</h1>
     <p class="small" style="margin:6px 0 20px">${PALETTES[pal].name}</p>
     <div class="frame"><div class="inner">${clothSVG(cells, N, pal, N === 2 ? 6 : N === 3 ? 4 : 3)}</div></div>
@@ -2208,43 +2263,48 @@ function startZen(from) {
 
 function playView() {
   const m = P.mode;
-  const eyebrow =
-    m === "level" ? chapterName(P.ch) : m === "daily" ? "Today’s cloth" : m === "tide" ? "Recreate" : "Zen";
-  const right =
-    m === "level" ? `Level ${P.idx + 1}` : m === "daily" ? new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date()) : m === "tide" ? clock(P.seconds) : "";
-  const back = m === "level" ? backLink("Levels", "levels") : m === "zen" && D ? backLink("Gallery", "gallery") : backLink("Room");
-  const sizes = m === "zen"
-    ? `<span class="group" role="group" aria-label="Grid size">${[2, 3, 4].map((n) => `<button class="small num" data-a="size" data-n="${n}" aria-pressed="${P.N === n}" style="min-width:26px;min-height:26px;border-radius:999px;${P.N === n ? "background:var(--ink);color:var(--paper)" : ""}">${n}</button>`).join("")}</span>`
-    : `<span class="small num" id="streak"></span>`;
-  app.innerHTML = `<div class="page">
-  <header class="top">${back}<div class="group">${m === "level" || m === "daily" ? `<button class="round" data-a="hint" id="hintBtn" aria-label="Hint">${I.lantern}</button>` : ""}${soundBtn()}</div></header>
-  <div class="play-wrap rise">
-    ${m === "zen"
-      ? `<h1 class="title" style="margin-bottom:4px">Zen</h1>`
-      : `<div><div class="status"><p class="eyebrow">${eyebrow}</p><span class="right num" id="right">${right}</span></div><div class="bar${m === "tide" ? " tide" : ""}" id="bar" style="margin-top:8px"><i></i></div></div>`}
-    <p class="note" id="note" hidden></p>
-    <div class="boards${P.N === 4 ? " n4" : ""}" id="boards">
-      <div><div class="label-row"><span class="eyebrow">Repeat</span></div><div class="frame tight"><div class="inner" id="cloth"></div></div></div>
-      <div><div class="label-row"><span class="eyebrow">Stitch</span>${sizes}</div><div class="stitch" id="stitch" role="grid" aria-label="Your stitch"></div></div>
+  const title = m === "level" ? chapterName(P.ch) : m === "daily" ? "Today’s cloth" : m === "tide" ? "Recreate" : "Zen";
+  const sub =
+    m === "level" ? `Cloth ${P.idx + 1} of ${TOTAL}` : m === "daily" ? new Intl.DateTimeFormat("en", { weekday: "long", month: "long", day: "numeric" }).format(new Date()) : m === "tide" ? clock(P.seconds) : PALETTES[P.pal].name;
+  const backTo = m === "level" ? ["Levels", "levels"] : m === "zen" && D ? ["Gallery", "gallery"] : ["Room", "room"];
+  const rightBtn = m === "level" || m === "daily" ? `<button class="round" data-a="hint" id="hintBtn" aria-label="Show one tile">${I.lantern}</button>` : "";
+  app.innerHTML = `<div class="page play-page">
+  <header class="top play-top">
+    <button class="round bare" data-a="${backTo[1]}" aria-label="Back to ${backTo[0]}">${I.back}</button>
+    <div class="heading"><h1 class="name">${title}</h1><p class="sub num" id="right">${sub}</p></div>
+    <div class="group">${rightBtn}${soundBtn()}</div>
+  </header>
+  ${m === "tide" ? '<div class="timer" id="bar"><i></i></div>' : ""}
+  ${m === "zen"
+    ? `<figure class="compare zen"><div class="frame tight"><div class="inner wide" id="cloth"></div></div></figure>`
+    : `<div class="compare">
+      <figure><div class="frame tight"><div class="inner" id="cloth"></div><figcaption>The cloth</figcaption></div></figure>
+      <figure><div class="frame tight" id="mineFrame"><div class="inner" id="mine"></div><figcaption>Yours</figcaption></div></figure>
     </div>
-    ${m !== "zen" ? `<div><div class="label-row"><span class="eyebrow">Your repeat</span></div><div class="frame tight"><div class="inner mine" id="mine"></div></div></div>` : ""}
-    <div class="memo" id="memo" hidden></div>
-    <div class="tools" id="tools">
-      ${m === "zen" ? `<div class="palettes" role="group" aria-label="Palette">${PALETTE_IDS.map((id) => `<button class="pill" data-a="pal" data-pal="${id}" aria-pressed="${id === P.pal}">${PALETTES[id].name}</button>`).join("")}</div>` : ""}
-      <div class="marks"><div class="scroller" id="marks" role="group" aria-label="Marks"></div>
-        <button class="dot-btn" data-a="erase" id="eraseBtn" aria-label="Clear a cell" aria-pressed="false">${I.eraser}</button>
-        <button class="dot-btn" data-a="undo" id="undoBtn" aria-label="Undo">${I.undo}</button></div>
-      <div class="swatches" id="swatches" role="group" aria-label="Glaze"></div>
-      <div id="facing"></div>
-      ${P.symOK ? `<div class="syms" role="group" aria-label="Symmetry">${SYMS.map((s) => `<button class="pill" data-a="sym" data-sym="${s}" aria-pressed="${P.sym === s}">${SYM_NAME[s]}</button>`).join("")}</div>` : ""}
+    <div class="counter" id="counter" aria-hidden="true"></div>`}
+  <p class="note" id="note" hidden></p>
+  <div class="bench" id="bench">
+    <div class="rail">
+      <button class="round" data-a="undo" id="undoBtn" aria-label="Undo">${I.undo}</button>
+      <button class="round" data-a="erase" id="eraseBtn" aria-label="Eraser" aria-pressed="false">${I.eraser}</button>
+      <button class="round" data-a="clear" aria-label="Clear the stitch">${I.trash}</button>
+      ${P.symOK ? `<button class="round${P.sym !== "none" ? " on" : ""}" data-a="sym" id="symBtn" aria-label="Symmetry: ${SYM_NAME[P.sym]}">${I["sym" + P.sym]}</button>` : ""}
     </div>
-    <div class="footer" id="footer"></div>
-  </div></div>`;
+    <div class="stitch" id="stitch" role="grid" aria-label="Your stitch"></div>
+    <div class="pad" id="pad" role="group" aria-label="Facing"></div>
+  </div>
+  <div class="memo" id="memo" hidden></div>
+  <div class="tray" id="tools">
+    ${m === "zen" ? `<div class="zen-row"><div class="palettes" role="group" aria-label="Palette">${PALETTE_IDS.map((id) => `<button class="pal" data-a="pal" data-pal="${id}" aria-label="${PALETTES[id].name}" aria-pressed="${id === P.pal}">${PALETTES[id].colors.slice(0, 4).map((c) => `<i style="background:${c}"></i>`).join("")}</button>`).join("")}</div><div class="seg" role="group" aria-label="Grid size">${[2, 3, 4].map((n) => `<button class="num" data-a="size" data-n="${n}" aria-pressed="${P.N === n}" aria-label="${n} by ${n}">${n}</button>`).join("")}</div></div>` : ""}
+    <div class="marks" id="marks" role="group" aria-label="Tiles"></div>
+    <div class="swatches" id="swatches" role="group" aria-label="Glaze"></div>
+  </div>
+  <div class="footer" id="footer"></div>
+  </div>`;
   bindStitch();
   renderTools();
   renderStitch();
-  renderCloth();
-  renderMine();
+  renderBoards(true);
   renderProgress();
   renderFooter();
   if (m === "tide") tideLoop();
@@ -2273,13 +2333,17 @@ function renderTools() {
     .join("");
   const m = P.brush.m;
   const f = LOOK[m].facings;
-  const facing = document.getElementById("facing");
+  const pad = document.getElementById("pad");
   if (f.length > 1 && !P.erasing) {
     const cur = LOOK[m].look[P.brush.poses[m] ?? f[0]];
-    facing.innerHTML = `<p class="eyebrow" style="margin:0 0 6px;font-size:11px">Facing</p><div class="facing ${f.length === 2 ? "f2" : "f4"}" role="group" aria-label="Facing">${f
-      .map((p, k) => `<button class="face-btn" data-a="face" data-p="${p}" aria-label="Facing ${k + 1}" aria-pressed="${k === cur}">${glyph(m, p).replace('class="glyph" ', "")}</button>`)
-      .join("")}</div>`;
-  } else facing.innerHTML = "";
+    pad.dataset.n = f.length;
+    pad.innerHTML = f
+      .map((p, k) => `<button class="face" data-a="face" data-p="${p}" aria-label="Facing ${k + 1} of ${f.length}" aria-pressed="${k === cur}">${tileSVG({ m, c: P.brush.c, p }, P.pal)}</button>`)
+      .join("");
+  } else {
+    pad.dataset.n = 0;
+    pad.innerHTML = "";
+  }
   const selected = marks.querySelector('[aria-pressed="true"]');
   if (selected && marks.scrollWidth > marks.clientWidth) {
     const l = selected.offsetLeft - marks.offsetLeft;
@@ -2307,22 +2371,18 @@ function renderStitch(changed = [], gift = -1) {
     })
     .join("");
 }
-function renderMine() {
-  const el = document.getElementById("mine");
+function renderBoards(first) {
   const cloth = document.getElementById("cloth");
-  if (!el || !cloth || !P) return;
-  const cell = cloth.clientWidth / (2 * P.N);
-  const width = el.clientWidth;
-  if (!cell || !width) return;
-  const rows = 2 * P.N;
-  el.style.height = Math.round(rows * cell) + "px";
-  el.innerHTML = bandSVG(P.stamp, P.N, P.pal, width / cell, rows);
+  if (!cloth) return;
+  if (P.mode === "zen") {
+    cloth.innerHTML = bandSVG(P.stamp, P.N, P.pal, 4 * P.N, 2 * P.N);
+    return;
+  }
+  if (first) cloth.innerHTML = clothSVG(P.target, P.N, P.pal, 2);
+  const mine = document.getElementById("mine");
+  if (mine) mine.innerHTML = clothSVG(P.stamp, P.N, P.pal, 2);
 }
-function renderCloth() {
-  const el = document.getElementById("cloth");
-  if (!el) return;
-  el.innerHTML = P.mode === "zen" ? clothSVG(P.stamp, P.N, P.pal, 3) : clothSVG(P.target, P.N, P.pal, 2);
-}
+
 function renderProgress() {
   if (!P.target) return;
   const hits = bestShift(P.stamp, P.target, P.N).hits;
@@ -2332,11 +2392,11 @@ function renderProgress() {
     document.getElementById("hintBtn")?.classList.remove("glow");
   }
   P.hits = hits;
-  if (P.mode === "tide") return;
-  const bar = document.getElementById("bar");
-  if (!bar) return;
-  bar.classList.toggle("held", P.phase === "clear");
-  bar.querySelector("i").style.transform = `scaleX(${hits / (P.N * P.N)})`;
+  const counter = document.getElementById("counter");
+  if (!counter) return;
+  counter.classList.toggle("held", P.phase === "clear");
+  counter.setAttribute("aria-label", `${hits} of ${P.N * P.N} tiles line up`);
+  counter.innerHTML = Array.from({ length: P.N * P.N }, (_, k) => XMARK.replace("<svg", `<svg class="${k < hits ? "on" : ""}" style="--k:${k}"`)).join("");
 }
 function setNote(text) {
   const n = document.getElementById("note");
@@ -2349,8 +2409,10 @@ function renderFooter() {
   if (!f) return;
   const tools = document.getElementById("tools");
   if (tools) tools.hidden = P.phase !== "play";
-  const streak = document.getElementById("streak");
-  if (streak && P.mode === "tide") streak.textContent = P.woven === 0 ? "" : `${P.woven} in a row`;
+  const bench = document.getElementById("bench");
+  if (bench) bench.classList.toggle("done", P.phase !== "play");
+  const mineFrame = document.getElementById("mineFrame");
+  if (mineFrame) mineFrame.classList.toggle("held", P.phase === "clear");
   if (P.mode === "zen") {
     f.innerHTML = `<div class="row"><button class="pill" data-a="fresh">Fresh cloth</button><button class="pill ink" data-a="settle">Settle</button></div>`;
     return;
@@ -2364,11 +2426,11 @@ function renderFooter() {
     f.innerHTML = `<div class="result">${[1, 2, 3].map((x) => starSvg(x <= P.earned)).join("")}</div>
     <div class="row"><button class="pill" data-a="replay">Again</button>${hasNext ? `<button class="pill ink" data-a="nextLevel">${P.idx % PER === PER - 1 ? chapterName(P.ch + 1) : "Next cloth"}</button>` : `<button class="pill ink" data-a="levels">Levels</button>`}</div>`;
   } else if (P.mode === "daily") {
-    f.innerHTML = `<div class="row"><button class="pill ink" data-a="room">Back to the room</button></div>`;
+    f.innerHTML = `<div class="row"><button class="pill" data-a="room">Room</button><button class="pill ink" data-a="continue">Continue</button></div>`;
   } else if (P.phase === "clear") {
-    f.innerHTML = `<div class="row"><button class="pill ink" data-a="tideNext">Next cloth</button></div>`;
+    f.innerHTML = `<p class="small num" style="margin:0;text-align:center">${P.woven} in a row</p><div class="row"><button class="pill ink" data-a="tideNext">Next cloth</button></div>`;
   } else {
-    f.innerHTML = `<div class="row"><button class="pill" data-a="room">Room</button><button class="pill ink" data-a="tide">Again</button></div>`;
+    f.innerHTML = `${save.tideBest ? `<p class="small num" style="margin:0;text-align:center">${P.woven ? `${P.woven} woven. ` : ""}Longest run ${save.tideBest}</p>` : ""}<div class="row"><button class="pill" data-a="room">Room</button><button class="pill ink" data-a="tide">Again</button></div>`;
   }
   requestAnimationFrame(() => {
     const r = f.getBoundingClientRect();
@@ -2377,11 +2439,10 @@ function renderFooter() {
 }
 function afterChange(changed, gift = -1) {
   renderStitch(changed, gift);
-  renderMine();
+  renderBoards();
   renderProgress();
   renderTools();
   if (P.mode === "zen") {
-    renderCloth();
     save.draft = { id: "draft", N: P.N, pal: P.pal, cells: cloneStamp(P.stamp) };
     clearTimeout(afterChange._t);
     afterChange._t = setTimeout(persist, 400);
@@ -2477,15 +2538,13 @@ function checkWin() {
       persist();
     }
     const r = document.getElementById("right");
-    if (r) r.textContent = save.daily.streak === 1 ? "1 day" : `${save.daily.streak} days in a row`;
+    if (r) r.textContent = save.daily.streak === 1 ? "Woven today" : `${save.daily.streak} days running`;
   } else if (P.mode === "tide") {
     P.woven += 1;
     if (P.woven > save.tideBest) {
       save.tideBest = P.woven;
       persist();
     }
-    const r = document.getElementById("right");
-    if (r) r.textContent = "Held";
     const bar = document.getElementById("bar");
     if (bar) bar.classList.add("held");
   }
@@ -2518,11 +2577,11 @@ function tideLoop() {
       Sound.fail();
       haptic(40);
       setNote(`Time. ${P.hits} of ${P.N * P.N} lined up.`);
-      if (right) right.textContent = "Time";
+      if (right) right.textContent = "Out of time";
       const memo = document.getElementById("memo");
       if (memo) {
         memo.hidden = false;
-        memo.innerHTML = `<div class="thumb">${clothSVG(P.target, P.N, P.pal, 1)}</div><span class="small">The stitch, for next time.</span>`;
+        memo.innerHTML = `<div class="thumb">${clothSVG(P.target, P.N, P.pal, 1)}</div><span class="small">The stitch it wanted</span>`;
       }
       renderStitch();
       renderTools();
@@ -2571,7 +2630,6 @@ function soundSheet() {
   <h2 class="title">Sound</h2>
   ${tog("music", "Music")}
   <div class="set"><span>Volume</span><input id="vol" type="range" min="0" max="1" step="0.05" value="${s.vol}" aria-label="Volume"></div>
-  ${tog("fountain", "Fountain")}
   ${tog("sfx", "Effects")}
   ${navigator.vibrate ? tog("haptics", "Haptics") : ""}
   <div class="set"><span class="small">Kept on this device.</span><button class="pill plain" data-a="reset" style="color:var(--clay);padding:0 8px">Reset progress</button></div>
@@ -2704,9 +2762,20 @@ const ACTIONS = {
     afterChange([]);
   },
   sym(el) {
-    P.sym = el.dataset.sym;
-    document.querySelectorAll('[data-a="sym"]').forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.sym === P.sym)));
+    P.sym = SYMS[(SYMS.indexOf(P.sym) + 1) % SYMS.length];
+    el.innerHTML = I["sym" + P.sym];
+    el.classList.toggle("on", P.sym !== "none");
+    el.setAttribute("aria-label", "Symmetry: " + SYM_NAME[P.sym]);
+    toast(SYM_NAME[P.sym]);
     Sound.ui();
+  },
+  clear() {
+    if (!P || P.phase !== "play" || !P.stamp.some((c) => c.m)) return;
+    pushPast();
+    P.stamp = emptyStamp(P.N);
+    Sound.erase();
+    haptic(10);
+    afterChange([]);
   },
   size(el) {
     const n = Number(el.dataset.n);
@@ -2720,6 +2789,8 @@ const ACTIONS = {
   },
   pal(el) {
     P.pal = el.dataset.pal;
+    const sub = document.getElementById("right");
+    if (sub) sub.textContent = PALETTES[P.pal].name;
     document.querySelectorAll('[data-a="pal"]').forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.pal === P.pal)));
     Sound.ui();
     afterChange([]);
@@ -2781,7 +2852,7 @@ let resizeT = 0;
 window.addEventListener("resize", () => {
   clearTimeout(resizeT);
   resizeT = setTimeout(() => {
-    if (screen === "play") renderMine();
+    if (screen === "play") renderBoards();
   }, 120);
 });
 document.addEventListener("keydown", (e) => {
